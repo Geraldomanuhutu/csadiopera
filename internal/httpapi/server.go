@@ -26,6 +26,7 @@ func New(svc *service.CSA) *Server {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.mux.ServeHTTP(w, r) }
 
 func (s *Server) routes() {
+	s.mux.HandleFunc("GET /{$}", s.beranda)
 	s.mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
 	a := s.auth
 	s.mux.Handle("GET /api/me", a(s.me))
@@ -60,7 +61,11 @@ type ctxHandler func(w http.ResponseWriter, r *http.Request, u domain.User)
 // (peran Lini 1/Lini 2 dan unit kerja dari Mapping Unit Kerja).
 func (s *Server) auth(h ctxHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u, ok := s.svc.User(r.Header.Get("X-User-ID"))
+		id := r.Header.Get("X-User-ID")
+		if id == "" {
+			id = r.URL.Query().Get("as") // DEMO SAJA: supaya bisa dicoba dari browser. Hapus di produksi.
+		}
+		u, ok := s.svc.User(id)
 		if !ok {
 			writeJSON(w, http.StatusUnauthorized, errBody("belum login atau user tidak dikenal"))
 			return
@@ -200,6 +205,34 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, u domain.User
 	out, err := s.svc.Dashboard(u)
 	respond(w, 200, out, err)
 }
+
+// beranda menampilkan petunjuk singkat saat URL dibuka di browser.
+func (s *Server) beranda(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(berandaHTML))
+}
+
+const berandaHTML = `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPERA · CSA ICoFR API</title>
+<style>body{font-family:system-ui,sans-serif;max-width:860px;margin:40px auto;padding:0 20px;color:#14202E;line-height:1.55}
+h1{font-size:24px;margin:0 0 4px}code{background:#EEF1F5;padding:2px 6px;border-radius:4px}a{color:#0066B2}
+table{border-collapse:collapse;width:100%;margin-top:8px}td,th{border-bottom:1px solid #DDE3EA;padding:8px;text-align:left;font-size:14px}</style></head><body>
+<h1>OPERA · CSA ICoFR API</h1>
+<p>Server referensi modul CSA ICoFR. Ini API JSON tanpa tampilan. Login demo memakai header <code>X-User-ID</code>, atau parameter <code>?as=</code> supaya bisa dicoba dari browser.</p>
+<p>User demo: <code>rina</code> (Lini 2), <code>sari</code> (Lini 1, Unit Mekaar Cibinong), <code>andi</code> (Lini 1, Unit Mekaar Citeureup).</p>
+<table><tr><th>Coba (GET)</th><th>Isi</th></tr>
+<tr><td><a href="/healthz">/healthz</a></td><td>cek server hidup</td></tr>
+<tr><td><a href="/api/me?as=rina">/api/me?as=rina</a></td><td>user yang login</td></tr>
+<tr><td><a href="/api/proses-bisnis?as=rina">/api/proses-bisnis</a></td><td>master proses bisnis ICoFR</td></tr>
+<tr><td><a href="/api/rcm?as=rina">/api/rcm</a></td><td>kontrol RCM</td></tr>
+<tr><td><a href="/api/rcm/lingkup?kuartal=3&as=rina">/api/rcm/lingkup?kuartal=3</a></td><td>key control wajib CSA di Q3 (kontrol tahunan tidak ikut)</td></tr>
+<tr><td><a href="/api/rcm/MKR-31-02/template?as=rina">/api/rcm/MKR-31-02/template</a></td><td>template kontrol CSA</td></tr>
+<tr><td><a href="/api/assessments?as=rina">/api/assessments</a></td><td>penugasan (Lini 2)</td></tr>
+<tr><td><a href="/api/kertas-kerja?as=sari">/api/kertas-kerja?as=sari</a></td><td>kertas kerja milik Unit Mekaar Cibinong</td></tr>
+<tr><td><a href="/api/antrian-validasi?as=rina">/api/antrian-validasi</a></td><td>antrian validasi Lini 2</td></tr>
+<tr><td><a href="/api/dashboard?as=rina">/api/dashboard</a></td><td>ringkasan dashboard</td></tr></table>
+<p>Aksi (dispatch, simpan isian, submit, validasi) memakai POST/PUT; contoh lengkap ada di README repository.</p>
+</body></html>`
 
 // ---------- helper ----------
 
