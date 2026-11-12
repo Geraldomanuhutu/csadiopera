@@ -90,7 +90,7 @@ Aturan lain yang sudah tertanam:
 
 ## API
 
-Semua request memakai header `X-User-ID` (untuk demo, parameter `?as=rina` juga diterima supaya bisa dicoba dari browser; hapus di produksi). Body dan respons JSON. Membuka `/` di browser menampilkan halaman petunjuk.
+Semua request memakai header `X-User-ID`. Body dan respons JSON.
 
 | Method | Path | Peran | Keterangan |
 |---|---|---|---|
