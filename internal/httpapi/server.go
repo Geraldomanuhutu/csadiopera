@@ -26,7 +26,8 @@ func New(svc *service.CSA) *Server {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.mux.ServeHTTP(w, r) }
 
 func (s *Server) routes() {
-	s.mux.HandleFunc("GET /{$}", s.beranda)
+	s.mux.HandleFunc("GET /api", s.beranda)
+	s.mux.HandleFunc("GET /api/{$}", s.beranda)
 	s.mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
 	a := s.auth
 	s.mux.Handle("GET /api/me", a(s.me))

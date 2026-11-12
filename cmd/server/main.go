@@ -15,6 +15,7 @@ import (
 	"opera/csa/internal/seed"
 	"opera/csa/internal/service"
 	"opera/csa/internal/store"
+	"opera/csa/web"
 )
 
 type logNotifier struct{}
@@ -35,7 +36,14 @@ func main() {
 	seed.Isi(st)
 	svc := service.New(st, logNotifier{}, time.Now)
 
-	srv := &http.Server{Addr: *addr, Handler: httpapi.New(svc), ReadHeaderTimeout: 5 * time.Second}
+	api := httpapi.New(svc)
+	root := http.NewServeMux()
+	root.Handle("/api", api)
+	root.Handle("/api/", api)
+	root.Handle("/healthz", api)
+	root.Handle("/", http.FileServer(http.FS(web.Static()))) // tampilan demo OPERA
+
+	srv := &http.Server{Addr: *addr, Handler: root, ReadHeaderTimeout: 5 * time.Second}
 	log.Printf("CSA ICoFR API jalan di %s (user demo: rina=Lini 2, sari=Lini 1 Cibinong, andi=Lini 1 Citeureup)", *addr)
 	log.Fatal(srv.ListenAndServe())
 }

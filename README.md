@@ -24,7 +24,8 @@ User demo: `rina` (Lini 2, Divisi MRO), `sari` (Lini 1, Unit Mekaar Cibinong), `
 ## Struktur
 
 ```
-cmd/server/          main, pasang store + service + HTTP
+cmd/server/          main, pasang store + service + HTTP + tampilan demo
+web/static/          tampilan demo OPERA (HTML/JS statis, belum memanggil API)
 internal/domain/     entitas, status, aturan bisnis (tanpa dependensi, bisa dipindah utuh)
 internal/service/    use case + otorisasi per peran, interface Store dan Notifier
 internal/store/      Store in-memory (ganti dengan repository database)
@@ -90,7 +91,7 @@ Aturan lain yang sudah tertanam:
 
 ## API
 
-Semua request memakai header `X-User-ID` (untuk demo, parameter `?as=rina` juga diterima supaya bisa dicoba dari browser; hapus di produksi). Body dan respons JSON. Membuka `/` di browser menampilkan halaman petunjuk.
+Semua request memakai header `X-User-ID` (untuk demo, parameter `?as=rina` juga diterima supaya bisa dicoba dari browser; hapus di produksi). Body dan respons JSON. Membuka `/` di browser menampilkan tampilan demo OPERA (folder `web/static`, data contoh tetap); `/api` menampilkan halaman petunjuk API.
 
 | Method | Path | Peran | Keterangan |
 |---|---|---|---|
